@@ -133,8 +133,8 @@ Tips: 这里需要增加适当的上下文，方便模型更好的判断属于�
 5. HTTP模块执行预约操作 linkHTTP 模块允许你调用任意 GET/POST 类型的 HTTP 接口，从而实现一些复杂的业务逻辑。这里我们调用了一个预约实验室的接口，传入的是信息提取模块的结果和预约行为。
 具体的入参结构可以参考HTTP模块，实在不行在接口里多打印 Debug。
 响应值也很简单，只需要返回一个 JSON 对象 即可。注意！是对象，不是字符串。
-总结 link 问题分类可以在简单的场景下使用，判断用户的问题类型，从而实现不同的路线。 可以通过内容提取模块，实现自然语言转结构化数据，从而实现复杂的逻辑操作。 内容提取 + HTTP 模块允许你无限扩展。 难点
-模型对连续对话的分类和提取能力不足 附件 link编排配置 link可直接复制，导入到 FastGPT 中。
+总结 link 问题分类可以在简单的场景下使用，判断用户的问题类型，从而实现不同的路线。 可以通过内容提取模块，实现自然语言转结构化数据，从而实现复杂的逻辑操作。 内容提取 + HTTP 模块允许你无限扩展。 困难点
+模型对连续对话时，分类和提取能力不足 附件 link编排配置 link可直接复制，导入到 FastGPT 中。
 编排配置 [ { &amp;#34;moduleId&amp;#34;: &amp;#34;userChatInput&amp;#34;, &amp;#34;name&amp;#34;: &amp;#34;用户问题(对话入口)&amp;#34;, &amp;#34;avatar&amp;#34;: &amp;#34;/imgs/module/userChatInput.</description></item><item><title>全能助手</title><link>/docs/workflow/examples/versatile_assistant/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/workflow/examples/versatile_assistant/</guid><description>众所周知 GPT 只是一个语言模型，功能上有很多局限，但只要综合利用高级编排各模块功能，就可以轻松突破原有 GPT 的局限，实现更多功能。
 当然，所谓“全能助手”只是一个遥远的设想，高级编排的玩法有很大的可能性，本文只是扩展了诸如【天气查询】、【微博热搜查询】的功能，主要还是希望大家能通过案例来了解下高级编排的思路，然后可以分享更多有意思的玩法。
 简要介绍一下“全能助手”的思路 link思路说来也简单，以下分别用文字和图片两种方式介绍下
@@ -214,25 +214,25 @@ Git Docker（构建镜像） Node.js v18.x (不推荐最新的，可能有兼容
 2. 克隆存储库 link克隆您在 GitHub 上 Fork 的存储库：
 git clone git@github.com:&amp;lt;github_username&amp;gt;/FastGPT.git 目录简要说明
 projects 目录下为 FastGPT 应用代码。其中 app 为 FastGPT 核心应用。（后续可能会引入其他应用） NextJS 框架前后端放在一起，API 服务位于 src/pages/api 目录内。 packages 目录为共用代码，通过 workspace 被注入到 projects 中，已配置 monorepo 自动注入，无需额外打包。 3. 安装数据库 link第一次开发，需要先部署数据库，建议本地开发可以随便找一台 2C2G 的轻量小数据库实践。数据库部署教程：Docker 快速部署。部署完了，可以本地访问其数据库。
-4. 初始配置 link以下文件均在 projects/app 路径下。</description></item><item><title>Sealos 一键部署</title><link>/docs/development/sealos/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/sealos/</guid><description>Sealos 的服务器在国外，不需要额外处理网络问题，无需服务器、无需魔法、无需域名，支持高并发 &amp;amp; 动态伸缩。点击以下按钮即可一键部署 👇
+4. 初始配置 link以下文件均在 projects/app 路径下。</description></item><item><title>Sealos 一键部署</title><link>/docs/development/sealos/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/sealos/</guid><description>部署架构图 link 一键部署 linkSealos 的服务器在国外，不需要额外处理网络问题，无需服务器、无需魔法、无需域名，支持高并发 &amp;amp; 动态伸缩。点击以下按钮即可一键部署 👇
 由于需要部署数据库，部署完后需要等待 2~4 分钟才能正常访问。默认用了最低配置，首次访问时会有些慢。
 点击 Sealos 提供的外网地址即可打开 FastGPT 的可视化界面。
-用户名：root
-密码就是刚刚一键部署时设置的环境变量
+登录 link用户名：root
+密码是刚刚一键部署时设置的root_password
 修改配置文件和环境变量 link在 Sealos 中，你可以打开应用管理（App Launchpad）看到部署的 FastGPT，可以打开数据库（Database）看到对应的数据库。
 在应用管理中，选中 FastGPT，点击变更，可以看到对应的环境变量和配置文件。
 🤖
 在 Sealos 上，FastGPT 一共运行了 1 个服务和 2 个数据库，如暂停和删除请注意数据库一同操作。（你可以白天启动，晚上暂停它们，省钱大法）
-更新 link点击重启会自动拉取最新镜像更新，请确保镜像tag正确。
-部署架构图 link Sealos 使用 link简介 linkFastGPT 商业版共包含了3个应用（fastgpt, fastgpt-plus, fastgpt-admin）和2个数据库，使用多 Api Key 时候需要安装 OneAPI（一个应用和一个数据库），总计4个应用和3个数据库。
+更新 link点击变更或重启会自动拉取镜像更新，请确保镜像tag正确。建议不要使用latest，改成固定版本号。
+Sealos 使用 link简介 linkFastGPT 商业版共包含了3个应用（fastgpt, fastgpt-plus, fastgpt-admin）和2个数据库，使用多 Api Key 时候需要安装 OneAPI（一个应用和一个数据库），总计4个应用和3个数据库。
 点击右侧的详情，可以查看对应应用的详细信息。
 如何更新/升级 FastGPT link升级脚本文档先看下文档，看下需要升级哪个版本。注意，不要跨版本升级！！！！！
 例如，目前是4.5 版本，要升级到4.5.1，就先把镜像版本改成v4.5.1，执行一下升级脚本，等待完成后再继续升级。如果目标版本不需要执行初始化，则可以跳过。
 升级步骤：
-查看更新文档，确认要升级的版本，避免跨版本升级。 打开 sealos 的应用管理 有2个应用 fastgpt ， fastgpt-pro 点击对应应用右边3个点，变更。或者点详情后右上角的变更。 修改镜像的版本号 点击变更/重启，会自动拉取最新镜像进行更新 执行对应版本的初始化脚本(如果有) 如何获取 FastGPT 访问链接 link打开对应的应用，点击外网访问地址。</description></item><item><title>Docker Compose 快速部署</title><link>/docs/development/docker/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/docker/</guid><description>推荐配置 link 环境 推荐配置（单节点） 测试 2c2g 100w 组向量 4c16g 500w 组向量 16c64g 1. 准备好代理环境（国外服务器可忽略） link确保可以访问 OpenAI，具体方案可以参考：代理方案。或直接在 Sealos 上 部署 OneAPI，既解决代理问题也能实现多 Key 轮询、接入其他大模型。
+查看更新文档，确认要升级的版本，避免跨版本升级。 打开 sealos 的应用管理 有2个应用 fastgpt ， fastgpt-pro 点击对应应用右边3个点，变更。或者点详情后右上角的变更。 修改镜像的版本号 点击变更/重启，会自动拉取最新镜像进行更新 执行对应版本的初始化脚本(如果有) 如何获取 FastGPT 访问链接 link打开对应的应用，点击外网访问地址。</description></item><item><title>Docker Compose 快速部署</title><link>/docs/development/docker/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/docker/</guid><description>推荐配置 link 环境 最低配置（单节点） 推荐配置 测试 2c2g 2c4g 100w 组向量 4c8g 50GB 4c16g 50GB 500w 组向量 8c32g 16c64g 200GB 1. 准备好代理环境（国外服务器可忽略） link确保可以访问 OpenAI，具体方案可以参考：代理方案。或直接在 Sealos 上 部署 OneAPI，既解决代理问题也能实现多 Key 轮询、接入其他大模型。
 2. 多模型支持 linkFastGPT 使用了 one-api 项目来管理模型池，其可以兼容 OpenAI 、Azure 、国内主流模型和本地模型等。
 可选择 Sealos 快速部署 OneAPI，更多部署方法可参考该项目的 README，也可以直接通过以下按钮一键部署：
-一、安装 Docker 和 docker-compose link Linux MacOS Windows # 安装 Docker curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun systemctl enable --now docker # 安装 docker-compose curl -L https://github.com/docker/compose/releases/download/2.20.3/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose chmod &amp;#43;x /usr/local/bin/docker-compose # 验证安装 docker -v docker-compose -v # 如失效，自行百度~ 推荐直接使用 Orbstack。可直接通过 Homebrew 来安装：</description></item><item><title>接入微软、ChatGLM、本地模型等</title><link>/docs/development/one-api/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/one-api/</guid><description>默认情况下，FastGPT 只配置了 GPT 的模型，如果你需要接入其他模型，需要进行一些额外配置。 One API 是一个 OpenAI 接口管理 &amp;amp; 分发系统，可以通过标准的 OpenAI API 格式访问所有的大模型，开箱即用。 FastGPT 可以通过接入 OneAPI 来实现对不同大模型的支持。OneAPI 的部署方法也很简单。 MySQL 版本 linkMySQL 版本支持多实例，高并发。
+一、安装 Docker 和 docker-compose link Linux MacOS Windows # 安装 Docker curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun systemctl enable --now docker # 安装 docker-compose curl -L https://github.</description></item><item><title>接入微软、ChatGLM、本地模型等</title><link>/docs/development/one-api/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/one-api/</guid><description>默认情况下，FastGPT 只配置了 GPT 的模型，如果你需要接入其他模型，需要进行一些额外配置。 One API 是一个 OpenAI 接口管理 &amp;amp; 分发系统，可以通过标准的 OpenAI API 格式访问所有的大模型，开箱即用。 FastGPT 可以通过接入 OneAPI 来实现对不同大模型的支持。OneAPI 的部署方法也很简单。 MySQL 版本 linkMySQL 版本支持多实例，高并发。
 直接点击以下按钮即可一键部署 👇
 部署完后会跳转「应用管理」，数据库在另一个应用「数据库」中。需要等待 1~3 分钟数据库运行后才能访问成功。
 SqlLite 版本 linkSqlLite 版本不支持多实例，适合个人小流量使用，但是价格非常便宜。
@@ -247,7 +247,7 @@ SESSION_SECRET=SESSION_SECRET POLLING_INTERVAL=60 BATCH_UPDATE_ENABLED=true BATC
 开发环境下，你需要将示例配置文件 config.json 复制成 config.local.json 文件才会生效。
 这个配置文件中包含了系统级参数、AI 对话的模型、function 模型等……
 旧版本配置文件 link以下配置适合 4.6.6-alpha 之前
-{ &amp;#34;SystemParams&amp;#34;: { &amp;#34;pluginBaseUrl&amp;#34;: &amp;#34;&amp;#34;, // 商业版接口地址 &amp;#34;vectorMaxProcess&amp;#34;: 15, // 向量生成最大进程，结合数据库性能和 key 来设置 &amp;#34;qaMaxProcess&amp;#34;: 15, // QA 生成最大进程，结合数据库性能和 key 来设置 &amp;#34;pgHNSWEfSearch&amp;#34;: 100 // pg vector 索引参数，越大精度高但速度慢 }, &amp;#34;ChatModels&amp;#34;: [ // 对话模型 { &amp;#34;model&amp;#34;: &amp;#34;gpt-3.5-turbo-1106&amp;#34;, &amp;#34;name&amp;#34;: &amp;#34;GPT35-1106&amp;#34;, &amp;#34;price&amp;#34;: 0, // 除以 100000 后等于1个token的价格 &amp;#34;maxContext&amp;#34;: 16000, // 最大上下文长度 &amp;#34;maxResponse&amp;#34;: 4000, // 最大回复长度 &amp;#34;quoteMaxToken&amp;#34;: 2000, // 最大引用内容长度 &amp;#34;maxTemperature&amp;#34;: 1.</description></item><item><title>常见开发 &amp; 部署问题</title><link>/docs/development/qa/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/qa/</guid><description>错误排查方式 link遇到问题先按下面方式排查。
+{ &amp;#34;SystemParams&amp;#34;: { &amp;#34;vectorMaxProcess&amp;#34;: 15, // 向量生成最大进程，结合数据库性能和 key 来设置 &amp;#34;qaMaxProcess&amp;#34;: 15, // QA 生成最大进程，结合数据库性能和 key 来设置 &amp;#34;pgHNSWEfSearch&amp;#34;: 100 // pg vector 索引参数，越大精度高但速度慢 }, &amp;#34;ChatModels&amp;#34;: [ // 对话模型 { &amp;#34;model&amp;#34;: &amp;#34;gpt-3.5-turbo-1106&amp;#34;, &amp;#34;name&amp;#34;: &amp;#34;GPT35-1106&amp;#34;, &amp;#34;price&amp;#34;: 0, // 除以 100000 后等于1个token的价格 &amp;#34;maxContext&amp;#34;: 16000, // 最大上下文长度 &amp;#34;maxResponse&amp;#34;: 4000, // 最大回复长度 &amp;#34;quoteMaxToken&amp;#34;: 2000, // 最大引用内容长度 &amp;#34;maxTemperature&amp;#34;: 1.</description></item><item><title>常见开发 &amp; 部署问题</title><link>/docs/development/qa/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/qa/</guid><description>错误排查方式 link遇到问题先按下面方式排查。
 docker ps -a 查看所有容器运行状态，检查是否全部 running，如有异常，尝试docker logs 容器名查看对应日志。 不懂 docker 不要瞎改端口，只需要改OPENAI_BASE_URL和CHAT_API_KEY即可。 容器都运行正常的，docker logs 容器名 查看报错日志 无法解决时，可以找找Issue，或新提 Issue，私有部署错误，务必提供详细的日志，否则很难排查。 通用问题 linkinsufficient_user_quota user quota is not enough linkOneAPI 账号的余额不足，默认 root 用户只有 200 刀，可以手动修改。
 xxx渠道找不到 linkOneAPI 中没有配置该模型渠道。
 页面中可以正常回复，API 报错 link页面中是用 stream=true 模式，所以API也需要设置 stream=true 来进行测试。部分模型接口（国产居多）非 Stream 的兼容有点垃圾。
@@ -265,6 +265,11 @@ Sealos 中，你可以在下图中找到你的域名：
 如何获取 rootkey link从docker-compose.yml中的environment中获取，对应的是ROOT_KEY的值。
 sealos 中可以从上图左侧的环境变量中获取。
 如何跨版本升级！！ link建议逐一版本升级，防止脏数据。例如，当前版本是4.</description></item><item><title>V4.6.6（需要改配置文件）</title><link>/docs/development/upgrading/466/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/upgrading/466/</guid><description>配置文件变更 link为了减少代码重复度，我们对配置文件做了一些修改：点击查看最新的配置文件
+商业版变更 link 更新商业版镜像到 4.6.6 版本。
+将旧版配置文件中的 SystemParams.pluginBaseUrl 放置到环境变量中:
+PRO_URL=商业版镜像地址（此处不再需要以 /api 结尾），例如:
+PRO_URL=http://fastgpt-plugin.ns-hsss5d.svc.cluster.local:3000
+原本在配置文件中的 FeConfig 已被移除，可以直接打开新的商业版镜像外网地址进行配置。包括 FastGPT 的各个参数和模型都可以直接在商业版镜像中配置，无需再变更 config.json 文件。
 V4.6.6 更新说明 link 查看 FastGPT 2024 RoadMap 新增 - Http 模块请求头支持 Json 编辑器。 新增 - ReRank模型部署 新增 - 搜索方式：分离向量语义检索，全文检索和重排，通过 RRF 进行排序合并。 优化 - 问题分类提示词，id引导。测试国产商用 api 模型（百度阿里智谱讯飞）使用 Prompt 模式均可分类。 UI 优化，未来将逐步替换新的UI设计。 优化代码：Icon 抽离和自动化获取。 修复 - 链接读取的数据集，未保存选择器，导致同步时不使用选择器。</description></item><item><title>V4.6.5（需要改配置文件）</title><link>/docs/development/upgrading/465/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/upgrading/465/</guid><description>配置文件变更 link由于 openai 已开始弃用 function call，改为 toolChoice。FastGPT 同步的修改了对于的配置和调用方式，需要对配置文件做一些修改：
 点击查看最新的配置文件
 主要是修改模型的functionCall字段，改成toolChoice即可。设置为true的模型，会默认走 openai 的 tools 模式；未设置或设置为false的，会走提示词生成模式。 问题补全模型与内容提取模型使用同一组配置。

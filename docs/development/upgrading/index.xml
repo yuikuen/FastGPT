@@ -11,6 +11,11 @@ Sealos 中，你可以在下图中找到你的域名：
 如何获取 rootkey link从docker-compose.yml中的environment中获取，对应的是ROOT_KEY的值。
 sealos 中可以从上图左侧的环境变量中获取。
 如何跨版本升级！！ link建议逐一版本升级，防止脏数据。例如，当前版本是4.</description></item><item><title>V4.6.6（需要改配置文件）</title><link>/docs/development/upgrading/466/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/upgrading/466/</guid><description>配置文件变更 link为了减少代码重复度，我们对配置文件做了一些修改：点击查看最新的配置文件
+商业版变更 link 更新商业版镜像到 4.6.6 版本。
+将旧版配置文件中的 SystemParams.pluginBaseUrl 放置到环境变量中:
+PRO_URL=商业版镜像地址（此处不再需要以 /api 结尾），例如:
+PRO_URL=http://fastgpt-plugin.ns-hsss5d.svc.cluster.local:3000
+原本在配置文件中的 FeConfig 已被移除，可以直接打开新的商业版镜像外网地址进行配置。包括 FastGPT 的各个参数和模型都可以直接在商业版镜像中配置，无需再变更 config.json 文件。
 V4.6.6 更新说明 link 查看 FastGPT 2024 RoadMap 新增 - Http 模块请求头支持 Json 编辑器。 新增 - ReRank模型部署 新增 - 搜索方式：分离向量语义检索，全文检索和重排，通过 RRF 进行排序合并。 优化 - 问题分类提示词，id引导。测试国产商用 api 模型（百度阿里智谱讯飞）使用 Prompt 模式均可分类。 UI 优化，未来将逐步替换新的UI设计。 优化代码：Icon 抽离和自动化获取。 修复 - 链接读取的数据集，未保存选择器，导致同步时不使用选择器。</description></item><item><title>V4.6.5（需要改配置文件）</title><link>/docs/development/upgrading/465/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>/docs/development/upgrading/465/</guid><description>配置文件变更 link由于 openai 已开始弃用 function call，改为 toolChoice。FastGPT 同步的修改了对于的配置和调用方式，需要对配置文件做一些修改：
 点击查看最新的配置文件
 主要是修改模型的functionCall字段，改成toolChoice即可。设置为true的模型，会默认走 openai 的 tools 模式；未设置或设置为false的，会走提示词生成模式。 问题补全模型与内容提取模型使用同一组配置。

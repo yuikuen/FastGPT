@@ -42,8 +42,8 @@ Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li
     &#34;age&#34;: 10
   }
 }</code>
-  </pre></div><p>那么，自定出参的<code>key</code>可以设置为:</p><ul><li>message (string)</li><li>data.name (string)</li><li>data.age (number)</li></ul><h2 id=post-示例>POST 示例 <a href=#post-%e7%a4%ba%e4%be%8b class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><p><strong>自定义入参</strong></p><ul><li>user.name (string)</li><li>user.age (number)</li><li>type (string)</li></ul><p><strong>自定义出参</strong></p><ul><li>message (string)</li><li>data.name (string)</li><li>data.age (number)</li></ul><p>那么，这个模块发出的请求则是:</p><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=febcdaTab data-bs-toggle=tab data-bs-target=#febcda type=button role=tab aria-controls=febcda aria-selected=true>POST 请求示例</a>
-<a class=nav-link id=fcabedTab data-bs-toggle=tab data-bs-target=#fcabed type=button role=tab aria-controls=fcabed aria-selected=true>POST响应</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=febcda role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=9ef46b0 class=language-bash>
+  </pre></div><p>那么，自定出参的<code>key</code>可以设置为:</p><ul><li>message (string)</li><li>data.name (string)</li><li>data.age (number)</li></ul><h2 id=post-示例>POST 示例 <a href=#post-%e7%a4%ba%e4%be%8b class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><p><strong>自定义入参</strong></p><ul><li>user.name (string)</li><li>user.age (number)</li><li>type (string)</li></ul><p><strong>自定义出参</strong></p><ul><li>message (string)</li><li>data.name (string)</li><li>data.age (number)</li></ul><p>那么，这个模块发出的请求则是:</p><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=fbaedcTab data-bs-toggle=tab data-bs-target=#fbaedc type=button role=tab aria-controls=fbaedc aria-selected=true>POST 请求示例</a>
+<a class=nav-link id=fdcbaeTab data-bs-toggle=tab data-bs-target=#fdcbae type=button role=tab aria-controls=fdcbae aria-selected=true>POST响应</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=fbaedc role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=9ef46b0 class=language-bash>
   <code>curl --location --request POST &#39;http://xxxx.com&#39; \
 --header &#39;Content-Type: application/json&#39; \
 --data-raw &#39;{
@@ -61,7 +61,7 @@ Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li
     &#34;type&#34;: &#34;&#34;
   }
 }&#39;</code>
-  </pre></div></div><div class="tab-pane fade" id=fcabed role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7ea966c class=language-json>
+  </pre></div></div><div class="tab-pane fade" id=fdcbae role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7ea966c class=language-json>
   <code>{
   &#34;message&#34;: &#34;message&#34;,
   &#34;data&#34;: {
@@ -69,10 +69,10 @@ Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li
     &#34;age&#34;: 10
   }
 }</code>
-  </pre></div></div></div><h2 id=get-示例>GET 示例 <a href=#get-%e7%a4%ba%e4%be%8b class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><p>GET 中，不推荐使用嵌套参数，否则会出现奇怪的问题。此外，GET 请求中，FastGPT 会将参数扁平化，不会将自定义参单独抽到 data 中，同时全局变量也会扁平化，因此需要注意字段 key 是否冲突。</p><p><strong>自定义入参</strong></p><ul><li>name (string)</li><li>age (number)</li><li>type (string)</li></ul><p><strong>自定义出参</strong></p><ul><li>message (string)</li><li>name (string)</li><li>age (number)</li></ul><p>那么，这个模块发出的请求则是:</p><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=fcabedTab data-bs-toggle=tab data-bs-target=#fcabed type=button role=tab aria-controls=fcabed aria-selected=true>GET 请求示例</a>
-<a class=nav-link id=edcafbTab data-bs-toggle=tab data-bs-target=#edcafb type=button role=tab aria-controls=edcafb aria-selected=true>GET 响应</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=fcabed role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7090d6b class=language-bash>
+  </pre></div></div></div><h2 id=get-示例>GET 示例 <a href=#get-%e7%a4%ba%e4%be%8b class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><p>GET 中，不推荐使用嵌套参数，否则会出现奇怪的问题。此外，GET 请求中，FastGPT 会将参数扁平化，不会将自定义参单独抽到 data 中，同时全局变量也会扁平化，因此需要注意字段 key 是否冲突。</p><p><strong>自定义入参</strong></p><ul><li>name (string)</li><li>age (number)</li><li>type (string)</li></ul><p><strong>自定义出参</strong></p><ul><li>message (string)</li><li>name (string)</li><li>age (number)</li></ul><p>那么，这个模块发出的请求则是:</p><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=becfadTab data-bs-toggle=tab data-bs-target=#becfad type=button role=tab aria-controls=becfad aria-selected=true>GET 请求示例</a>
+<a class=nav-link id=fdcabeTab data-bs-toggle=tab data-bs-target=#fdcabe type=button role=tab aria-controls=fdcabe aria-selected=true>GET 响应</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=becfad role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7090d6b class=language-bash>
   <code>curl --location --request GET &#39;http://xxx.com/test?name&amp;age&amp;type&amp;appId=65782f7ffae5f7854ed4498b&amp;chatId=xxxx&amp;responseChatItemId=xxxx&amp;cTime=2023-12-18 13:45:46&#39;</code>
-  </pre></div></div><div class="tab-pane fade" id=edcafb role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7ea966c class=language-json>
+  </pre></div></div><div class="tab-pane fade" id=fdcabe role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7ea966c class=language-json>
   <code>{
   &#34;message&#34;: &#34;message&#34;,
   &#34;data&#34;: {
