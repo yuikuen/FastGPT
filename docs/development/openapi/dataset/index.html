@@ -39,10 +39,10 @@ Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li
   &#34;message&#34;: &#34;&#34;,
   &#34;data&#34;: &#34;65112ab717c32018f4156361&#34;
 }</code>
-  </pre></div><h2 id=知识库添加数据>知识库添加数据 <a href=#%e7%9f%a5%e8%af%86%e5%ba%93%e6%b7%bb%e5%8a%a0%e6%95%b0%e6%8d%ae class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=abdcefTab data-bs-toggle=tab data-bs-target=#abdcef type=button role=tab aria-controls=abdcef aria-selected=true>请求示例</a>
-<a class=nav-link id=abefcdTab data-bs-toggle=tab data-bs-target=#abefcd type=button role=tab aria-controls=abefcd aria-selected=true>参数说明</a>
-<a class=nav-link id=fdcaebTab data-bs-toggle=tab data-bs-target=#fdcaeb type=button role=tab aria-controls=fdcaeb aria-selected=true>响应例子</a>
-<a class=nav-link id=ceadbfTab data-bs-toggle=tab data-bs-target=#ceadbf type=button role=tab aria-controls=ceadbf aria-selected=true>QA Prompt 模板</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=abdcef role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=f0fca76 class=language-bash>
+  </pre></div><h2 id=知识库添加数据>知识库添加数据 <a href=#%e7%9f%a5%e8%af%86%e5%ba%93%e6%b7%bb%e5%8a%a0%e6%95%b0%e6%8d%ae class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=acdebfTab data-bs-toggle=tab data-bs-target=#acdebf type=button role=tab aria-controls=acdebf aria-selected=true>请求示例</a>
+<a class=nav-link id=bdfecaTab data-bs-toggle=tab data-bs-target=#bdfeca type=button role=tab aria-controls=bdfeca aria-selected=true>参数说明</a>
+<a class=nav-link id=fabedcTab data-bs-toggle=tab data-bs-target=#fabedc type=button role=tab aria-controls=fabedc aria-selected=true>响应例子</a>
+<a class=nav-link id=bdeacfTab data-bs-toggle=tab data-bs-target=#bdeacf type=button role=tab aria-controls=bdeacf aria-selected=true>QA Prompt 模板</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=acdebf role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=f0fca76 class=language-bash>
   <code>curl --location --request POST &#39;https://api.fastgpt.in/api/core/dataset/data/pushData&#39; \
 --header &#39;Authorization: Bearer apikey&#39; \
 --header &#39;Content-Type: application/json&#39; \
@@ -66,7 +66,7 @@ Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li
         }
     ]
 }&#39;</code>
-  </pre></div></div><div class="tab-pane fade" id=abefcd role=tabpanel aria-labelledby=nav-1><p>需要先了解 FastGPT 的多路索引概念：</p><p>在 FastGPT 中，你可以为一组数据创建多个索引，如果不指定索引，则系统会自动取对应的 chunk 作为索引。例如前面的请求示例中：</p><p><code>q：你是谁？a:我是FastGPT助手</code> 它的<code>indexes</code>属性为空，意味着不自定义索引，而是使用默认的索引（你是谁？\n我是FastGPT助手）。</p><p>在第二组数据中<code>q:你会什么？a:我什么都会</code>指定了一个<code>你好</code>的索引，因此这组数据的索引为<code>你好</code>。</p><div class=prism-codeblock><pre id=085f8e5 class=language-json>
+  </pre></div></div><div class="tab-pane fade" id=bdfeca role=tabpanel aria-labelledby=nav-1><p>需要先了解 FastGPT 的多路索引概念：</p><p>在 FastGPT 中，你可以为一组数据创建多个索引，如果不指定索引，则系统会自动取对应的 chunk 作为索引。例如前面的请求示例中：</p><p><code>q：你是谁？a:我是FastGPT助手</code> 它的<code>indexes</code>属性为空，意味着不自定义索引，而是使用默认的索引（你是谁？\n我是FastGPT助手）。</p><p>在第二组数据中<code>q:你会什么？a:我什么都会</code>指定了一个<code>你好</code>的索引，因此这组数据的索引为<code>你好</code>。</p><div class=prism-codeblock><pre id=085f8e5 class=language-json>
   <code>{
     &#34;collectionId&#34;: &#34;文件集合的ID，参考上面的第二张图&#34;,
     &#34;mode&#34;: &#34;chunk | qa &#34;, //  chunk 模式: 可自定义索引。qa 模型：无法自定义索引，会自动取 data 中的 q 作为数据，让模型自动生成问答对和索引。
@@ -84,7 +84,7 @@ Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li
     ],
     
 }</code>
-  </pre></div></div><div class="tab-pane fade" id=fdcaeb role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=94e88b9 class=language-json>
+  </pre></div></div><div class="tab-pane fade" id=fabedc role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=94e88b9 class=language-json>
   <code>{
     &#34;code&#34;: 200,
     &#34;statusText&#34;: &#34;&#34;,
@@ -96,7 +96,7 @@ Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li
         &#34;error&#34;: [] // 其他错误
     }
 }</code>
-  </pre></div></div><div class="tab-pane fade" id=ceadbf role=tabpanel aria-labelledby=nav-1><p>{{theme}} 里的内容可以换成数据的主题。默认为：它们可能包含多个主题内容</p><div class=prism-codeblock><pre id=157ff98 class=language->
+  </pre></div></div><div class="tab-pane fade" id=bdeacf role=tabpanel aria-labelledby=nav-1><p>{{theme}} 里的内容可以换成数据的主题。默认为：它们可能包含多个主题内容</p><div class=prism-codeblock><pre id=157ff98 class=language->
   <code>我会给你一段文本，{{theme}}，学习它们，并整理学习成果，要求为：
 1. 提出最多 25 个问题。
 2. 给出每个问题的答案。
@@ -110,9 +110,9 @@ A2:
 ……
 
 我的文本：&#34;&#34;&#34;{{text}}&#34;&#34;&#34;</code>
-  </pre></div></div></div><h2 id=搜索测试>搜索测试 <a href=#%e6%90%9c%e7%b4%a2%e6%b5%8b%e8%af%95 class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=abdfceTab data-bs-toggle=tab data-bs-target=#abdfce type=button role=tab aria-controls=abdfce aria-selected=true>请求示例</a>
-<a class=nav-link id=abcdfeTab data-bs-toggle=tab data-bs-target=#abcdfe type=button role=tab aria-controls=abcdfe aria-selected=true>参数说明</a>
-<a class=nav-link id=bacdefTab data-bs-toggle=tab data-bs-target=#bacdef type=button role=tab aria-controls=bacdef aria-selected=true>响应示例</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=abdfce role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7033e2a class=language-bash>
+  </pre></div></div></div><h2 id=搜索测试>搜索测试 <a href=#%e6%90%9c%e7%b4%a2%e6%b5%8b%e8%af%95 class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><nav><div class="nav nav-tabs" id=nav-tab role=tablist><a class="nav-link active" id=efdbacTab data-bs-toggle=tab data-bs-target=#efdbac type=button role=tab aria-controls=efdbac aria-selected=true>请求示例</a>
+<a class=nav-link id=eacbfdTab data-bs-toggle=tab data-bs-target=#eacbfd type=button role=tab aria-controls=eacbfd aria-selected=true>参数说明</a>
+<a class=nav-link id=dcabfeTab data-bs-toggle=tab data-bs-target=#dcabfe type=button role=tab aria-controls=dcabfe aria-selected=true>响应示例</a></div></nav><div class=tab-content id=nav-tab-content><div class="tab-pane fade show active" id=efdbac role=tabpanel aria-labelledby=nav-1><div class=prism-codeblock><pre id=7033e2a class=language-bash>
   <code>curl --location --request POST &#39;https://api.fastgpt.in/api/core/dataset/searchTest&#39; \
 --header &#39;Authorization: Bearer fastgpt-xxxxx&#39; \
 --header &#39;Content-Type: application/json&#39; \
@@ -124,7 +124,7 @@ A2:
     &#34;searchMode&#34;: &#34;embedding&#34;,
     &#34;usingReRank&#34;: false
 }&#39;</code>
-  </pre></div></div><div class="tab-pane fade" id=abcdfe role=tabpanel aria-labelledby=nav-1><ul><li>datasetId - 知识库ID</li><li>text - 需要测试的文本</li><li>limit - 最大 tokens 数量</li><li>similarity - 最低相关度（0~1，可选）</li><li>searchMode - 搜索模式：embedding | fullTextRecall | mixedRecall</li><li>usingReRank - 使用重排</li></ul></div><div class="tab-pane fade" id=bacdef role=tabpanel aria-labelledby=nav-1><p>返回 top k 结果， limit 为最大 Tokens 数量，最多 20000 tokens。</p><div class=prism-codeblock><pre id=ad5c5b4 class=language-bash>
+  </pre></div></div><div class="tab-pane fade" id=eacbfd role=tabpanel aria-labelledby=nav-1><ul><li>datasetId - 知识库ID</li><li>text - 需要测试的文本</li><li>limit - 最大 tokens 数量</li><li>similarity - 最低相关度（0~1，可选）</li><li>searchMode - 搜索模式：embedding | fullTextRecall | mixedRecall</li><li>usingReRank - 使用重排</li></ul></div><div class="tab-pane fade" id=dcabfe role=tabpanel aria-labelledby=nav-1><p>返回 top k 结果， limit 为最大 Tokens 数量，最多 20000 tokens。</p><div class=prism-codeblock><pre id=ad5c5b4 class=language-bash>
   <code>{
   &#34;code&#34;: 200,
   &#34;statusText&#34;: &#34;&#34;,
