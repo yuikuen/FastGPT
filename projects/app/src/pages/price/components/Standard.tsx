@@ -1,32 +1,40 @@
 import React, { useMemo, useState } from 'react';
 import MyIcon from '@fastgpt/web/components/common/Icon';
-import { Box, Button, Flex, Grid } from '@chakra-ui/react';
+import { Box, Button, Flex, Grid, HStack } from '@chakra-ui/react';
 import { useTranslation } from 'next-i18next';
 import { StandardSubLevelEnum, SubModeEnum } from '@fastgpt/global/support/wallet/sub/constants';
-import { useUserStore } from '@/web/support/user/useUserStore';
-import { postCheckStandardSub, postUpdateStandardSub } from '@/web/support/wallet/sub/api';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
 import { standardSubLevelMap } from '@fastgpt/global/support/wallet/sub/constants';
-import { StandardSubPlanParams } from '@fastgpt/global/support/wallet/sub/api';
-import { useRequest } from '@/web/common/hooks/useRequest';
-import { StandardSubPlanUpdateResponse } from '@fastgpt/global/support/wallet/sub/api.d';
-import { useToast } from '@fastgpt/web/hooks/useToast';
-import { useConfirm } from '@/web/common/hooks/useConfirm';
-import { formatStorePrice2Read } from '@fastgpt/global/support/wallet/bill/tools';
+import { useRequest2 } from '@fastgpt/web/hooks/useRequest';
 import { TeamSubSchema } from '@fastgpt/global/support/wallet/sub/type';
+import QRCodePayModal, { type QRPayProps } from '@/components/support/wallet/QRCodePayModal';
+import { getWxPayQRCode } from '@/web/support/wallet/bill/api';
+import { BillTypeEnum } from '@fastgpt/global/support/wallet/bill/constants';
+import StandardPlanContentList from '@/components/support/wallet/StandardPlanContentList';
+
+export enum PackageChangeStatusEnum {
+  buy = 'buy',
+  renewal = 'renewal',
+  upgrade = 'upgrade'
+}
 
 const Standard = ({
-  standardPlan,
-  refetchTeamSubPlan
+  standardPlan: myStandardPlan,
+  onPaySuccess
 }: {
   standardPlan?: TeamSubSchema;
-  refetchTeamSubPlan: () => void;
+  onPaySuccess?: () => void;
 }) => {
   const { t } = useTranslation();
-  const { subPlans, feConfigs } = useSystemStore();
-  const { toast } = useToast();
-  const { ConfirmModal, openConfirm } = useConfirm({});
 
+  const packagePayTextMap = {
+    [PackageChangeStatusEnum.buy]: t('common:pay.package_tip.buy'),
+    [PackageChangeStatusEnum.renewal]: t('common:pay.package_tip.renewal'),
+    [PackageChangeStatusEnum.upgrade]: t('common:pay.package_tip.upgrade')
+  };
+
+  const [packageChange, setPackageChange] = useState<PackageChangeStatusEnum>();
+  const { subPlans, feConfigs } = useSystemStore();
   const [selectSubMode, setSelectSubMode] = useState<`${SubModeEnum}`>(SubModeEnum.month);
 
   const standardSubList = useMemo(() => {
@@ -36,251 +44,239 @@ const Standard = ({
             price: value.price * (selectSubMode === SubModeEnum.month ? 1 : 10),
             level: level as `${StandardSubLevelEnum}`,
             ...standardSubLevelMap[level as `${StandardSubLevelEnum}`],
+            label: value.name || standardSubLevelMap[level as `${StandardSubLevelEnum}`].label, // custom label
             maxTeamMember: value.maxTeamMember,
             maxAppAmount: value.maxAppAmount,
             maxDatasetAmount: value.maxDatasetAmount,
             chatHistoryStoreDuration: value.chatHistoryStoreDuration,
             maxDatasetSize: value.maxDatasetSize,
-            customApiKey: value.customApiKey,
-            customCopyright: value.customCopyright,
+            permissionCustomApiKey: value.permissionCustomApiKey,
+            permissionCustomCopyright: value.permissionCustomCopyright,
             trainingWeight: value.trainingWeight,
-            reRankWeight: value.reRankWeight,
+            permissionReRank: value.permissionReRank,
             totalPoints: value.totalPoints * (selectSubMode === SubModeEnum.month ? 1 : 12),
-            websiteSyncInterval: value.websiteSyncInterval
+            permissionWebsiteSync: value.permissionWebsiteSync
           };
         })
       : [];
   }, [subPlans?.standard, selectSubMode]);
 
-  const { mutate: onclickUpdateStandardPlan, isLoading: isUpdatingStandardPlan } = useRequest({
-    mutationFn: (data: StandardSubPlanParams) => postUpdateStandardSub(data),
-    onSuccess() {
-      refetchTeamSubPlan();
-    },
-    successToast: t('support.wallet.subscription.Standard update success'),
-    errorToast: t('support.wallet.subscription.Standard update fail')
-  });
+  // Pay code
+  const [qrPayData, setQRPayData] = useState<QRPayProps>();
 
-  const { mutate: onclickPreCheckStandPlan, isLoading: isCheckingStandardPlan } = useRequest({
-    mutationFn: (data: StandardSubPlanParams) => postCheckStandardSub(data),
-    onSuccess(res: StandardSubPlanUpdateResponse) {
-      if (!res.balanceEnough) {
-        return toast({
-          status: 'warning',
-          title: t('support.wallet.Balance not enough tip')
-        });
-      }
-      if (res.payPrice === undefined) {
-        onclickUpdateStandardPlan({
-          level: res.nextSubLevel,
-          mode: res.nextMode
-        });
-      } else if (res.payPrice > 0) {
-        openConfirm(
-          () =>
-            onclickUpdateStandardPlan({
-              level: res.nextSubLevel,
-              mode: res.nextMode
-            }),
-          undefined,
-          t('support.wallet.subscription.Standard plan pay confirm', {
-            payPrice: formatStorePrice2Read(res.payPrice).toFixed(2)
-          })
-        )();
-      } else {
-        openConfirm(
-          () =>
-            onclickUpdateStandardPlan({
-              level: res.nextSubLevel,
-              mode: res.nextMode
-            }),
-          undefined,
-          t('support.wallet.subscription.Refund plan and pay confirm', {
-            amount: formatStorePrice2Read(Math.abs(res.payPrice)).toFixed(2)
-          })
-        )();
-      }
+  /* Get pay code */
+  const { runAsync: onPay, loading: isLoading } = useRequest2(getWxPayQRCode, {
+    onSuccess(res) {
+      setQRPayData({
+        readPrice: res.readPrice,
+        codeUrl: res.codeUrl,
+        billId: res.billId
+      });
     }
   });
 
   return (
-    <Flex flexDirection={'column'} alignItems={'center'} position={'relative'}>
-      <Box fontWeight={'bold'} fontSize={['24px', '36px']}>
-        {t('support.wallet.subscription.Sub plan')}
-      </Box>
-      <Box mt={8} mb={10} color={'myGray.500'} fontSize={'lg'}>
-        {t('support.wallet.subscription.Sub plan tip')}
-      </Box>
-      <Box>
-        <RowTabs
-          list={[
-            { label: t('support.wallet.subscription.mode.Month'), value: SubModeEnum.month },
-            {
-              label: (
-                <Flex>
-                  {t('support.wallet.subscription.mode.Year')}
-                  <Box color={selectSubMode === SubModeEnum.month ? 'red.600' : 'auto'}>
-                    ({t('support.wallet.subscription.mode.Year sale')})
+    <>
+      <Flex flexDirection={'column'} alignItems={'center'} position={'relative'}>
+        <Box>
+          <RowTabs
+            list={[
+              {
+                label: t('common:support.wallet.subscription.mode.Month'),
+                value: SubModeEnum.month
+              },
+              {
+                label: (
+                  <Flex>
+                    <Box whiteSpace={'nowrap'}>
+                      {t('common:support.wallet.subscription.mode.Year')}
+                    </Box>
+                    <Box
+                      whiteSpace={'nowrap'}
+                      ml={1}
+                      color={selectSubMode === SubModeEnum.month ? 'red.600' : 'auto'}
+                    >
+                      ({t('common:support.wallet.subscription.mode.Year sale')})
+                    </Box>
+                  </Flex>
+                ),
+                value: SubModeEnum.year
+              }
+            ]}
+            value={selectSubMode}
+            onChange={(e) => setSelectSubMode(e as `${SubModeEnum}`)}
+          />
+        </Box>
+        {/* card */}
+        <Grid
+          mt={[10, '48px']}
+          gridTemplateColumns={['1fr', 'repeat(2,1fr)', 'repeat(4,1fr)']}
+          gap={[4, 6, 8]}
+          w={'100%'}
+          maxW={'1440px'}
+          minH={'550px'}
+        >
+          {standardSubList.map((item) => {
+            const isCurrentPlan = item.level === myStandardPlan?.currentSubLevel;
+
+            const isHigherLevel =
+              standardSubLevelMap[item.level].weight >
+              standardSubLevelMap[myStandardPlan?.currentSubLevel || StandardSubLevelEnum.free]
+                .weight;
+
+            return (
+              <Box
+                key={item.level}
+                pos={'relative'}
+                flex={'1 0 0'}
+                bg={isCurrentPlan ? 'blue.50' : 'rgba(255, 255, 255, 0.90)'}
+                p={'28px'}
+                borderRadius={'xl'}
+                borderWidth={isCurrentPlan ? '4px' : '1.5px'}
+                boxShadow={'1.5'}
+                {...(isCurrentPlan
+                  ? {
+                      borderColor: 'primary.600'
+                    }
+                  : {
+                      borderColor: 'myGray.150'
+                    })}
+              >
+                {isCurrentPlan && (
+                  <Box
+                    position={'absolute'}
+                    right={0}
+                    top={'1.62rem'}
+                    px={3}
+                    py={'0.38rem'}
+                    color={'blue.700'}
+                    fontSize={'xs'}
+                    bg={'blue.200'}
+                    fontWeight={'500'}
+                    borderLeftRadius={'sm'}
+                  >
+                    {t('common:is_using')}
                   </Box>
-                </Flex>
-              ),
-              value: SubModeEnum.year
-            }
-          ]}
-          value={selectSubMode}
-          onChange={(e) => setSelectSubMode(e as `${SubModeEnum}`)}
-        />
-      </Box>
-      {/* card */}
-      <Grid
-        mt={[10, '48px']}
-        gridTemplateColumns={['1fr', 'repeat(2,1fr)', 'repeat(4,1fr)']}
-        gap={[4, 6, 8]}
-        w={'100%'}
-      >
-        {standardSubList.map((item) => (
-          <Box
-            key={item.level}
-            bg={'rgba(255, 255, 255, 0.90)'}
-            p={'28px'}
-            borderRadius={'2xl'}
-            borderWidth={'1px'}
-            borderColor={'myGray.150'}
-            boxShadow={'1.5'}
-          >
-            <Box fontSize={'lg'} fontWeight={'500'}>
-              {t(item.label)}
-            </Box>
-            <Box fontSize={['32px', '42px']} fontWeight={'bold'}>
-              ￥{item.price}
-            </Box>
-            <Box color={'myGray.500'} h={'40px'}>
-              {t(item.desc, { title: feConfigs?.systemTitle })}
-            </Box>
-            {(() => {
-              if (item.level === StandardSubLevelEnum.free && selectSubMode === SubModeEnum.year) {
-                return (
-                  <Button isDisabled mt={4} mb={6} w={'100%'} variant={'solid'}>
-                    {t('support.wallet.subscription.Nonsupport')}
-                  </Button>
-                );
-              }
-              if (
-                item.level === standardPlan?.currentSubLevel &&
-                selectSubMode === standardPlan?.currentMode
-              ) {
-                return (
-                  <Button mt={4} mb={6} w={'100%'} variant={'whiteBase'} isDisabled>
-                    {t('support.wallet.subscription.Current plan')}
-                  </Button>
-                );
-              }
-              if (
-                item.level === standardPlan?.nextSubLevel &&
-                selectSubMode === standardPlan?.nextMode
-              ) {
-                return (
-                  <Button mt={4} mb={6} w={'100%'} variant={'whiteBase'} isDisabled>
-                    {t('support.wallet.subscription.Next plan')}
-                  </Button>
-                );
-              }
-              return (
-                <Button
-                  mt={4}
-                  mb={6}
-                  w={'100%'}
-                  variant={'primaryGhost'}
-                  isLoading={isUpdatingStandardPlan || isCheckingStandardPlan}
-                  onClick={() =>
-                    onclickPreCheckStandPlan({
-                      level: item.level,
-                      mode: selectSubMode
-                    })
+                )}
+                <Box fontSize={'md'} fontWeight={'500'} color={'myGray.900'}>
+                  {t(item.label as any)}
+                </Box>
+                <Box fontSize={['32px', '42px']} fontWeight={'bold'} color={'myGray.900'}>
+                  ￥{item.price}
+                </Box>
+                <Box color={'myGray.500'} h={'40px'} fontSize={'xs'}>
+                  {t(item.desc as any, { title: feConfigs?.systemTitle })}
+                </Box>
+
+                {/* Button */}
+                {(() => {
+                  if (item.level === StandardSubLevelEnum.free) {
+                    return (
+                      <Button
+                        mt={4}
+                        mb={6}
+                        _active={{}}
+                        _hover={{}}
+                        boxShadow={'0'}
+                        cursor={'default'}
+                        w={'100%'}
+                        isDisabled
+                        variant={'whiteBase'}
+                      >
+                        {t('common:free')}
+                      </Button>
+                    );
                   }
-                >
-                  {t('support.wallet.subscription.Buy now')}
-                </Button>
-              );
-            })()}
+                  // feature:
+                  // if (
+                  //   item.level === myStandardPlan?.nextSubLevel &&
+                  //   selectSubMode === myStandardPlan?.nextMode
+                  // ) {
+                  //   return (
+                  //     <Button mt={4} mb={6} w={'100%'} variant={'whiteBase'} isDisabled>
+                  //       {t('common:support.wallet.subscription.Next plan')}
+                  //     </Button>
+                  //   );
+                  // }
+                  if (isCurrentPlan) {
+                    return (
+                      <Button
+                        mt={4}
+                        mb={6}
+                        w={'100%'}
+                        variant={'primary'}
+                        isLoading={isLoading}
+                        onClick={() => {
+                          setPackageChange(PackageChangeStatusEnum.renewal);
+                          onPay({
+                            type: BillTypeEnum.standSubPlan,
+                            level: item.level,
+                            subMode: selectSubMode
+                          });
+                        }}
+                      >
+                        {t('user:bill.renew_plan')}
+                      </Button>
+                    );
+                  }
+                  if (isHigherLevel) {
+                    return (
+                      <Button
+                        mt={4}
+                        mb={6}
+                        w={'100%'}
+                        variant={'primaryGhost'}
+                        isLoading={isLoading}
+                        onClick={() => {
+                          setPackageChange(PackageChangeStatusEnum.upgrade);
+                          onPay({
+                            type: BillTypeEnum.standSubPlan,
+                            level: item.level,
+                            subMode: selectSubMode
+                          });
+                        }}
+                      >
+                        {t('common:support.wallet.subscription.Upgrade plan')}
+                      </Button>
+                    );
+                  }
+                  return (
+                    <Button
+                      mt={4}
+                      mb={6}
+                      w={'100%'}
+                      variant={'primaryGhost'}
+                      isLoading={isLoading}
+                      onClick={() => {
+                        setPackageChange(PackageChangeStatusEnum.buy);
+                        onPay({
+                          type: BillTypeEnum.standSubPlan,
+                          level: item.level,
+                          subMode: selectSubMode
+                        });
+                      }}
+                    >
+                      {t('user:bill.buy_plan')}
+                    </Button>
+                  );
+                })()}
 
-            {/* function list */}
-            <Grid gap={4}>
-              <Flex alignItems={'center'}>
-                <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                <Box color={'myGray.600'}>
-                  {t('support.wallet.subscription.function.Max members', {
-                    amount: item.maxTeamMember
-                  })}
-                </Box>
-              </Flex>
-              <Flex alignItems={'center'}>
-                <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                <Box color={'myGray.600'}>
-                  {t('support.wallet.subscription.function.Max app', {
-                    amount: item.maxAppAmount
-                  })}
-                </Box>
-              </Flex>
-              <Flex alignItems={'center'}>
-                <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                <Box color={'myGray.600'}>
-                  {t('support.wallet.subscription.function.Max dataset', {
-                    amount: item.maxDatasetAmount
-                  })}
-                </Box>
-              </Flex>
-              <Flex alignItems={'center'}>
-                <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                <Box color={'myGray.600'}>
-                  {t('support.wallet.subscription.function.History store', {
-                    amount: item.chatHistoryStoreDuration
-                  })}
-                </Box>
-              </Flex>
-              <Flex alignItems={'center'}>
-                <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                <Box color={'myGray.600'}>
-                  {t('support.wallet.subscription.function.Max dataset size', {
-                    amount: item.maxDatasetSize
-                  })}
-                </Box>
-              </Flex>
-              <Flex alignItems={'center'}>
-                <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                <Box color={'myGray.600'}>
-                  {t('support.wallet.subscription.function.Points', {
-                    amount: item.totalPoints
-                  })}
-                </Box>
-              </Flex>
-              <Flex alignItems={'center'}>
-                <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                <Box color={'myGray.600'}>
-                  {t('support.wallet.subscription.Training weight', {
-                    weight: item.trainingWeight
-                  })}
-                </Box>
-              </Flex>
-              {!!item.customApiKey && (
-                <Flex alignItems={'center'}>
-                  <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                  <Box color={'myGray.600'}>个人API Key</Box>
-                </Flex>
-              )}
-              {!!item.websiteSyncInterval && (
-                <Flex alignItems={'center'}>
-                  <MyIcon name={'price/right'} w={'16px'} mr={3} />
-                  <Box color={'myGray.600'}>{item.websiteSyncInterval} h/次 web站点同步</Box>
-                </Flex>
-              )}
-            </Grid>
-          </Box>
-        ))}
-      </Grid>
+                {/* function list */}
+                <StandardPlanContentList level={item.level} mode={selectSubMode} />
+              </Box>
+            );
+          })}
+        </Grid>
 
-      <ConfirmModal />
-    </Flex>
+        {!!qrPayData && packageChange && (
+          <QRCodePayModal
+            tip={packagePayTextMap[packageChange]}
+            onSuccess={onPaySuccess}
+            {...qrPayData}
+          />
+        )}
+      </Flex>
+    </>
   );
 };
 
@@ -316,7 +312,7 @@ const RowTabs = ({
           alignItems={'center'}
           justifyContent={'center'}
           cursor={'pointer'}
-          borderRadius={'md'}
+          borderRadius={'sm'}
           px={'12px'}
           py={'7px'}
           userSelect={'none'}
@@ -332,7 +328,7 @@ const RowTabs = ({
               })}
         >
           {item.icon && <MyIcon name={item.icon as any} mr={1} w={'14px'} />}
-          <Box>{item.label}</Box>
+          <Box fontWeight={'500'}>{item.label}</Box>
         </Flex>
       ))}
     </Box>

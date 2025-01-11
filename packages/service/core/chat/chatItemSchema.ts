@@ -1,4 +1,4 @@
-import { connectionMongo, type Model } from '../../common/mongo';
+import { connectionMongo, getMongoModel, type Model } from '../../common/mongo';
 const { Schema, model, models } = connectionMongo;
 import { ChatItemSchema as ChatItemType } from '@fastgpt/global/core/chat/type';
 import { ChatRoleMap } from '@fastgpt/global/core/chat/constants';
@@ -7,9 +7,9 @@ import {
   TeamCollectionName,
   TeamMemberCollectionName
 } from '@fastgpt/global/support/user/team/constant';
-import { appCollectionName } from '../app/schema';
+import { AppCollectionName } from '../app/schema';
 import { userCollectionName } from '../../support/user/schema';
-import { ModuleOutputKeyEnum } from '@fastgpt/global/core/module/constants';
+import { DispatchNodeResponseKeyEnum } from '@fastgpt/global/core/workflow/runtime/constants';
 
 export const ChatItemCollectionName = 'chatitems';
 
@@ -39,12 +39,16 @@ const ChatItemSchema = new Schema({
   },
   appId: {
     type: Schema.Types.ObjectId,
-    ref: appCollectionName,
+    ref: AppCollectionName,
     required: true
   },
   time: {
     type: Date,
     default: () => new Date()
+  },
+  hideInUI: {
+    type: Boolean,
+    default: false
   },
   obj: {
     // chat role
@@ -54,8 +58,8 @@ const ChatItemSchema = new Schema({
   },
   value: {
     // chat content
-    type: String,
-    default: ''
+    type: Array,
+    default: []
   },
   userGoodFeedback: {
     type: String
@@ -75,31 +79,30 @@ const ChatItemSchema = new Schema({
       a: String
     }
   },
-  [ModuleOutputKeyEnum.responseData]: {
+  [DispatchNodeResponseKeyEnum.nodeResponse]: {
     type: Array,
     default: []
   }
 });
 
 try {
-  ChatItemSchema.index({ dataId: 1 }, { background: true });
+  ChatItemSchema.index({ dataId: 1 });
   /* delete by app; 
      delete by chat id;
      get chat list; 
      get chat logs; 
      close custom feedback; 
   */
-  ChatItemSchema.index({ appId: 1, chatId: 1, dataId: 1 }, { background: true });
-  ChatItemSchema.index({ time: -1, obj: 1 }, { background: true });
-  ChatItemSchema.index({ userGoodFeedback: 1 }, { background: true });
-  ChatItemSchema.index({ userBadFeedback: 1 }, { background: true });
-  ChatItemSchema.index({ customFeedbacks: 1 }, { background: true });
-  ChatItemSchema.index({ adminFeedback: 1 }, { background: true });
+  ChatItemSchema.index({ appId: 1, chatId: 1, dataId: 1 });
+  // admin charts
+  ChatItemSchema.index({ time: -1, obj: 1 });
+  // timer, clear history
+  ChatItemSchema.index({ teamId: 1, time: -1 });
+
+  // Admin charts
+  ChatItemSchema.index({ obj: 1, time: -1 }, { partialFilterExpression: { obj: 'Human' } });
 } catch (error) {
   console.log(error);
 }
 
-export const MongoChatItem: Model<ChatItemType> =
-  models[ChatItemCollectionName] || model(ChatItemCollectionName, ChatItemSchema);
-
-MongoChatItem.syncIndexes();
+export const MongoChatItem = getMongoModel<ChatItemType>(ChatItemCollectionName, ChatItemSchema);

@@ -1,12 +1,12 @@
-import { InformTypeEnum, UserStatusEnum } from './constant';
-import { TeamItemType } from './team/type';
+import { TeamPermission } from '../permission/user/controller';
+import { UserStatusEnum } from './constant';
+import { TeamTmbItemType } from './team/type';
 
 export type UserModelSchema = {
   _id: string;
   username: string;
   password: string;
   avatar: string;
-  balance: number;
   promotionRate: number;
   inviterId?: string;
   openaiKey: string;
@@ -14,9 +14,8 @@ export type UserModelSchema = {
   timezone: string;
   status: `${UserStatusEnum}`;
   lastLoginTmbId?: string;
-  openaiAccount?: {
-    key: string;
-    baseUrl: string;
+  fastgpt_sem?: {
+    keyword: string;
   };
 };
 
@@ -24,9 +23,10 @@ export type UserType = {
   _id: string;
   username: string;
   avatar: string;
-  balance: number;
   timezone: string;
   promotionRate: UserModelSchema['promotionRate'];
-  openaiAccount: UserModelSchema['openaiAccount'];
-  team: TeamItemType;
+  team: TeamTmbItemType;
+  standardInfo?: standardInfoType;
+  notificationAccount?: string;
+  permission: TeamPermission;
 };

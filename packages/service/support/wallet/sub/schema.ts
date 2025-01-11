@@ -1,15 +1,19 @@
-import { connectionMongo, type Model } from '../../../common/mongo';
-const { Schema, model, models } = connectionMongo;
+/* 
+  user sub plan
+  1. type=standard: There will only be 1, and each team will have one
+  2. type=extraDatasetSize/extraPoints: Can buy multiple
+*/
+import { connectionMongo, getMongoModel } from '../../../common/mongo';
+const { Schema } = connectionMongo;
 import { TeamCollectionName } from '@fastgpt/global/support/user/team/constant';
 import {
-  standardSubLevelMap,
-  subModeMap,
-  subStatusMap,
-  subTypeMap
+  StandardSubLevelEnum,
+  SubModeEnum,
+  SubTypeEnum
 } from '@fastgpt/global/support/wallet/sub/constants';
 import type { TeamSubSchema } from '@fastgpt/global/support/wallet/sub/type';
 
-export const subCollectionName = 'team.subscriptions';
+export const subCollectionName = 'team_subscriptions';
 
 const SubSchema = new Schema({
   teamId: {
@@ -19,27 +23,7 @@ const SubSchema = new Schema({
   },
   type: {
     type: String,
-    enum: Object.keys(subTypeMap),
-    required: true
-  },
-  status: {
-    // active: continue sub; canceled: canceled sub;
-    type: String,
-    enum: Object.keys(subStatusMap),
-    required: true
-  },
-  mode: {
-    type: String,
-    enum: Object.keys(subModeMap)
-  },
-  currentMode: {
-    type: String,
-    enum: Object.keys(subModeMap),
-    required: true
-  },
-  nextMode: {
-    type: String,
-    enum: Object.keys(subModeMap),
+    enum: Object.values(SubTypeEnum),
     required: true
   },
   startTime: {
@@ -50,101 +34,63 @@ const SubSchema = new Schema({
     type: Date,
     required: true
   },
-  price: {
-    // last sub pay price(total price)
-    type: Number,
-    required: true
-  },
-  pointPrice: {
-    // stand level point total price
-    type: Number
-  },
 
-  // sub content
+  // standard sub
+  currentMode: {
+    type: String,
+    enum: Object.values(SubModeEnum)
+  },
+  nextMode: {
+    type: String,
+    enum: Object.values(SubModeEnum)
+  },
   currentSubLevel: {
     type: String,
-    enum: Object.keys(standardSubLevelMap)
+    enum: Object.values(StandardSubLevelEnum)
   },
   nextSubLevel: {
     type: String,
-    enum: Object.keys(standardSubLevelMap)
+    enum: Object.values(StandardSubLevelEnum)
   },
+
+  // stand sub and extra points sub. Plan total points
   totalPoints: {
     type: Number
   },
+  surplusPoints: {
+    // plan surplus points
+    type: Number
+  },
 
+  // extra dataset size
   currentExtraDatasetSize: {
     type: Number
-  },
-  nextExtraDatasetSize: {
-    type: Number
-  },
-
-  currentExtraPoints: {
-    type: Number
-  },
-  nextExtraPoints: {
-    type: Number
-  },
-
-  // standard sub limit
-  // maxTeamMember: {
-  //   type: Number
-  // },
-  // maxAppAmount: {
-  //   type: Number
-  // },
-  // maxDatasetAmount: {
-  //   type: Number
-  // },
-  // chatHistoryStoreDuration: {
-  //   // n day
-  //   type: Number
-  // },
-  // maxDatasetSize: {
-  //   type: Number
-  // },
-  // trainingWeight: {
-  //   // 0 1 2 3
-  //   type: Number
-  // },
-  // customApiKey: {
-  //   type: Boolean
-  // },
-  // customCopyright: {
-  //   type: Boolean
-  // },
-  // websiteSyncInterval: {
-  //   // hours
-  //   type: Number
-  // },
-  // reRankWeight: {
-  //   // 0 1 2 3
-  //   type: Number
-  // },
-  // totalPoints: {
-  //   // record standard sub points
-  //   type: Number
-  // },
-
-  surplusPoints: {
-    // standard sub / extra points sub
-    type: Number
-  },
-
-  // abandon
-  renew: Boolean, //决定是否续费
-  datasetStoreAmount: Number
+  }
 });
 
 try {
-  SubSchema.index({ teamId: 1 });
-  SubSchema.index({ status: 1 });
-  SubSchema.index({ type: 1 });
-  SubSchema.index({ expiredTime: -1 });
+  // Get plan by expiredTime
+  SubSchema.index({ expiredTime: -1, currentSubLevel: 1 });
+
+  // Get team plan
+  SubSchema.index({ teamId: 1, type: 1, expiredTime: -1 });
+  // timer task. Get standard plan;Get free plan;Clear expired extract plan
+  SubSchema.index({ type: 1, expiredTime: -1, currentSubLevel: 1 });
+
+  // 修改后的唯一索引
+  SubSchema.index(
+    {
+      teamId: 1,
+      type: 1,
+      currentSubLevel: 1
+    },
+    {
+      unique: true,
+      partialFilterExpression: { type: SubTypeEnum.standard }
+    }
+  );
 } catch (error) {
   console.log(error);
 }
 
-export const MongoTeamSub: Model<TeamSubSchema> =
-  models[subCollectionName] || model(subCollectionName, SubSchema);
+export const MongoTeamSub = getMongoModel<TeamSubSchema>(subCollectionName, SubSchema);

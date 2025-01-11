@@ -1,9 +1,9 @@
-import { TrainingModeEnum, DatasetCollectionTypeEnum, DatasetDataIndexTypeEnum } from './constants';
+import { TrainingModeEnum, DatasetCollectionTypeEnum } from './constants';
 import { getFileIcon } from '../../common/file/icon';
 import { strIsLink } from '../../common/string/tools';
 
 export function getCollectionIcon(
-  type: `${DatasetCollectionTypeEnum}` = DatasetCollectionTypeEnum.file,
+  type: DatasetCollectionTypeEnum = DatasetCollectionTypeEnum.file,
   name = ''
 ) {
   if (type === DatasetCollectionTypeEnum.folder) {
@@ -24,13 +24,15 @@ export function getSourceNameIcon({
   sourceName: string;
   sourceId?: string;
 }) {
-  if (strIsLink(sourceId)) {
-    return 'common/linkBlue';
-  }
-  const fileIcon = getFileIcon(sourceName, '');
-  if (fileIcon) {
-    return fileIcon;
-  }
+  try {
+    const fileIcon = getFileIcon(decodeURIComponent(sourceName.replace(/%/g, '%25')), '');
+    if (fileIcon) {
+      return fileIcon;
+    }
+    if (strIsLink(sourceId)) {
+      return 'common/linkBlue';
+    }
+  } catch (error) {}
 
   return 'file/fill/manual';
 }
@@ -41,13 +43,13 @@ export function getDefaultIndex(props?: { q?: string; a?: string; dataId?: strin
   const qaStr = `${q}\n${a}`.trim();
   return {
     defaultIndex: true,
-    type: a ? DatasetDataIndexTypeEnum.qa : DatasetDataIndexTypeEnum.chunk,
     text: a ? qaStr : q,
     dataId
   };
 }
 
-export const predictDataLimitLength = (mode: `${TrainingModeEnum}`, data: any[]) => {
+export const predictDataLimitLength = (mode: TrainingModeEnum, data: any[]) => {
   if (mode === TrainingModeEnum.qa) return data.length * 20;
+  if (mode === TrainingModeEnum.auto) return data.length * 5;
   return data.length;
 };
