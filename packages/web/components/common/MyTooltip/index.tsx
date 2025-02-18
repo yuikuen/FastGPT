@@ -1,16 +1,14 @@
 import React from 'react';
 import { Tooltip, TooltipProps } from '@chakra-ui/react';
 
-interface Props extends TooltipProps {
-  forceShow?: boolean;
-}
+interface Props extends TooltipProps {}
 
 const MyTooltip = ({ children, shouldWrapChildren = true, ...props }: Props) => {
   return (
     <Tooltip
-      className="tooltip"
+      className="chakra-tooltip"
       bg={'white'}
-      arrowShadowColor={' rgba(0,0,0,0.05)'}
+      arrowShadowColor={'rgba(0,0,0,0.05)'}
       hasArrow
       arrowSize={12}
       offset={[-15, 15]}

@@ -1,9 +1,9 @@
 import type { NextApiResponse } from 'next';
-import { sseResponseEventEnum } from './constant';
+import { SseResponseEventEnum } from '@fastgpt/global/core/workflow/runtime/constants';
 import { proxyError, ERROR_RESPONSE, ERROR_ENUM } from '@fastgpt/global/common/error/errorCode';
 import { addLog } from '../system/log';
 import { clearCookie } from '../../support/permission/controller';
-import { replaceSensitiveLink } from '@fastgpt/global/common/string/tools';
+import { replaceSensitiveText } from '@fastgpt/global/common/string/tools';
 
 export interface ResponseType<T = any> {
   code: number;
@@ -18,9 +18,10 @@ export const jsonRes = <T = any>(
     message?: string;
     data?: T;
     error?: any;
+    url?: string;
   }
 ) => {
-  const { code = 200, message = '', data = null, error } = props || {};
+  const { code = 200, message = '', data = null, error, url } = props || {};
 
   const errResponseKey = typeof error === 'string' ? error : error?.message;
   // Specified error
@@ -30,7 +31,17 @@ export const jsonRes = <T = any>(
       clearCookie(res);
     }
 
-    return res.json(ERROR_RESPONSE[errResponseKey]);
+    addLog.error(`Api response error: ${url}`, ERROR_RESPONSE[errResponseKey]);
+
+    res.status(code);
+
+    if (message) {
+      res.send(message);
+    } else {
+      res.json(ERROR_RESPONSE[errResponseKey]);
+    }
+
+    return;
   }
 
   // another error
@@ -47,13 +58,13 @@ export const jsonRes = <T = any>(
       msg = error?.error?.message;
     }
 
-    addLog.error(`response error: ${msg}`, error);
+    addLog.error(`Api response error: ${url}, ${msg}`, error);
   }
 
   res.status(code).json({
     code,
     statusText: '',
-    message: replaceSensitiveLink(message || msg),
+    message: replaceSensitiveText(message || msg),
     data: data !== undefined ? data : null
   });
 };
@@ -70,7 +81,7 @@ export const sseErrRes = (res: NextApiResponse, error: any) => {
 
     return responseWrite({
       res,
-      event: sseResponseEventEnum.error,
+      event: SseResponseEventEnum.error,
       data: JSON.stringify(ERROR_RESPONSE[errResponseKey])
     });
   }
@@ -90,8 +101,8 @@ export const sseErrRes = (res: NextApiResponse, error: any) => {
 
   responseWrite({
     res,
-    event: sseResponseEventEnum.error,
-    data: JSON.stringify({ message: replaceSensitiveLink(msg) })
+    event: SseResponseEventEnum.error,
+    data: JSON.stringify({ message: replaceSensitiveText(msg) })
   });
 };
 
@@ -132,3 +143,22 @@ export function responseWrite({
   event && Write(`event: ${event}\n`);
   Write(`data: ${data}\n\n`);
 }
+
+export const responseWriteNodeStatus = ({
+  res,
+  status = 'running',
+  name
+}: {
+  res?: NextApiResponse;
+  status?: 'running';
+  name: string;
+}) => {
+  responseWrite({
+    res,
+    event: SseResponseEventEnum.flowNodeStatus,
+    data: JSON.stringify({
+      status,
+      name
+    })
+  });
+};

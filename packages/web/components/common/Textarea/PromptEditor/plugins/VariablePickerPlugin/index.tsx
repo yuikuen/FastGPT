@@ -2,9 +2,8 @@ import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext
 import { LexicalTypeaheadMenuPlugin } from '@lexical/react/LexicalTypeaheadMenuPlugin';
 import { $createTextNode, $getSelection, $isRangeSelection, TextNode } from 'lexical';
 import * as React from 'react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import * as ReactDOM from 'react-dom';
-import { VariableInputEnum } from '@fastgpt/global/core/module/constants';
 import { useTranslation } from 'next-i18next';
 import MyIcon from '../../../../Icon';
 import { Box, Flex } from '@chakra-ui/react';
@@ -23,42 +22,6 @@ export default function VariablePickerPlugin({
   const checkForTriggerMatch = useBasicTypeaheadTriggerMatch('{', {
     minLength: 0
   });
-
-  const VariableTypeList = useMemo(
-    () => [
-      {
-        title: t('core.module.variable.input type'),
-        icon: 'core/app/variable/input',
-        value: VariableInputEnum.input
-      },
-      {
-        title: t('core.module.variable.textarea type'),
-        icon: 'core/app/variable/textarea',
-        value: VariableInputEnum.textarea
-      },
-      {
-        title: t('core.module.variable.select type'),
-        icon: 'core/app/variable/select',
-        value: VariableInputEnum.select
-      }
-    ],
-    [t]
-  );
-
-  // const options: Array<any> = useMemo(() => {
-  //   // const newVariableOption = {
-  //   //   label: t('common.Add New') + "变量",
-  //   //   key: 'new_variable',
-  //   //   icon: 'core/modules/variable'
-  //   // };
-  //   return [
-  //     ...variables.map((item) => ({
-  //       ...item,
-  //       icon: VariableTypeList.find((type) => type.value === item.type)?.icon
-  //     }))
-  //     // newVariableOption
-  //   ];
-  // }, [VariableTypeList, t, variables]);
 
   const onSelectOption = useCallback(
     (selectedOption: any, nodeToRemove: TextNode | null, closeMenu: () => void) => {
@@ -99,10 +62,11 @@ export default function VariablePickerPlugin({
                 borderColor={'borderColor.base'}
                 p={2}
                 borderRadius={'md'}
-                position={'fixed'}
+                position={'absolute'}
                 w={'auto'}
-                overflow={'hidden'}
                 zIndex={99999}
+                maxH={'300px'}
+                overflow={'auto'}
               >
                 {variables.map((item, index) => (
                   <Flex
@@ -136,9 +100,9 @@ export default function VariablePickerPlugin({
                     }}
                   >
                     <MyIcon name={(item.icon as any) || 'core/modules/variable'} w={'14px'} />
-                    <Box ml={2} fontSize={'sm'}>
+                    <Box ml={2} fontSize={'sm'} whiteSpace={'nowrap'}>
                       {item.key}
-                      {item.key !== item.label && `(${item.label})`}
+                      {item.key !== item.label && `(${t(item.label as any)})`}
                     </Box>
                   </Flex>
                 ))}

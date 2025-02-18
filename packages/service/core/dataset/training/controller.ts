@@ -1,17 +1,18 @@
-import { delay } from '@fastgpt/global/common/system/utils';
 import { MongoDatasetTraining } from './schema';
 import type {
   PushDatasetDataChunkProps,
   PushDatasetDataProps,
   PushDatasetDataResponse
 } from '@fastgpt/global/core/dataset/api.d';
-import { getCollectionWithDataset } from '../controller';
 import { TrainingModeEnum } from '@fastgpt/global/core/dataset/constants';
 import { simpleText } from '@fastgpt/global/common/string/tools';
-import { countPromptTokens } from '@fastgpt/global/common/string/tiktoken';
-import type { VectorModelItemType, LLMModelItemType } from '@fastgpt/global/core/ai/model.d';
+import { ClientSession } from '../../../common/mongo';
+import { getLLMModel, getEmbeddingModel } from '../../ai/model';
+import { addLog } from '../../../common/system/log';
+import { getCollectionWithDataset } from '../controller';
+import { mongoSessionRun } from '../../../common/mongo/sessionRun';
 
-export const lockTrainingDataByTeamId = async (teamId: string, retry = 3): Promise<any> => {
+export const lockTrainingDataByTeamId = async (teamId: string): Promise<any> => {
   try {
     await MongoDatasetTraining.updateMany(
       {
@@ -21,45 +22,60 @@ export const lockTrainingDataByTeamId = async (teamId: string, retry = 3): Promi
         lockTime: new Date('2999/5/5')
       }
     );
-  } catch (error) {
-    if (retry > 0) {
-      await delay(1000);
-      return lockTrainingDataByTeamId(teamId, retry - 1);
-    }
-    return Promise.reject(error);
-  }
+  } catch (error) {}
+};
+
+export const pushDataListToTrainingQueueByCollectionId = async ({
+  collectionId,
+  ...props
+}: {
+  teamId: string;
+  tmbId: string;
+  session?: ClientSession;
+} & PushDatasetDataProps) => {
+  const {
+    dataset: { _id: datasetId, agentModel, vectorModel }
+  } = await getCollectionWithDataset(collectionId);
+  return pushDataListToTrainingQueue({
+    ...props,
+    datasetId,
+    collectionId,
+    agentModel,
+    vectorModel
+  });
 };
 
 export async function pushDataListToTrainingQueue({
   teamId,
   tmbId,
+  datasetId,
   collectionId,
+  agentModel,
+  vectorModel,
   data,
   prompt,
   billId,
   trainingMode = TrainingModeEnum.chunk,
-
-  vectorModelList = [],
-  datasetModelList = []
+  session
 }: {
   teamId: string;
   tmbId: string;
-  vectorModelList: VectorModelItemType[];
-  datasetModelList: LLMModelItemType[];
+  datasetId: string;
+  agentModel: string;
+  vectorModel: string;
+  session?: ClientSession;
 } & PushDatasetDataProps): Promise<PushDatasetDataResponse> {
-  const {
-    datasetId: { _id: datasetId, vectorModel, agentModel }
-  } = await getCollectionWithDataset(collectionId);
-
-  const checkModelValid = async ({ collectionId }: { collectionId: string }) => {
-    if (!collectionId) return Promise.reject(`CollectionId is empty`);
+  const { model, maxToken, weight } = await (async () => {
+    const agentModelData = getLLMModel(agentModel);
+    if (!agentModelData) {
+      return Promise.reject(`File model ${agentModel} is inValid`);
+    }
+    const vectorModelData = getEmbeddingModel(vectorModel);
+    if (!vectorModelData) {
+      return Promise.reject(`Vector model ${vectorModel} is inValid`);
+    }
 
     if (trainingMode === TrainingModeEnum.chunk) {
-      const vectorModelData = vectorModelList?.find((item) => item.model === vectorModel);
-      if (!vectorModelData) {
-        return Promise.reject(`Model ${vectorModel} is inValid`);
-      }
-
       return {
         maxToken: vectorModelData.maxToken * 1.5,
         model: vectorModelData.model,
@@ -67,23 +83,25 @@ export async function pushDataListToTrainingQueue({
       };
     }
 
-    if (trainingMode === TrainingModeEnum.qa) {
-      const qaModelData = datasetModelList?.find((item) => item.model === agentModel);
-      if (!qaModelData) {
-        return Promise.reject(`Model ${agentModel} is inValid`);
-      }
+    if (trainingMode === TrainingModeEnum.qa || trainingMode === TrainingModeEnum.auto) {
       return {
-        maxToken: qaModelData.maxContext * 0.8,
-        model: qaModelData.model,
+        maxToken: agentModelData.maxContext * 0.8,
+        model: agentModelData.model,
         weight: 0
       };
     }
-    return Promise.reject(`Training mode "${trainingMode}" is inValid`);
-  };
 
-  const { model, maxToken, weight } = await checkModelValid({
-    collectionId
-  });
+    return Promise.reject(`Training mode "${trainingMode}" is inValid`);
+  })();
+
+  // filter repeat or equal content
+  const set = new Set();
+  const filterResult: Record<string, PushDatasetDataChunkProps[]> = {
+    success: [],
+    overToken: [],
+    repeat: [],
+    error: []
+  };
 
   // format q and a, remove empty char
   data.forEach((item) => {
@@ -98,19 +116,8 @@ export async function pushDataListToTrainingQueue({
         };
       })
       .filter(Boolean);
-  });
 
-  // filter repeat or equal content
-  const set = new Set();
-  const filterResult: Record<string, PushDatasetDataChunkProps[]> = {
-    success: [],
-    overToken: [],
-    repeat: [],
-    error: []
-  };
-
-  // filter repeat content
-  data.forEach((item) => {
+    // filter repeat content
     if (!item.q) {
       filterResult.error.push(item);
       return;
@@ -118,10 +125,7 @@ export async function pushDataListToTrainingQueue({
 
     const text = item.q + item.a;
 
-    // count q token
-    const token = countPromptTokens(item.q);
-
-    if (token > maxToken) {
+    if (text.length > maxToken) {
       filterResult.overToken.push(item);
       return;
     }
@@ -136,10 +140,19 @@ export async function pushDataListToTrainingQueue({
   });
 
   // insert data to db
-  const insertData = async (dataList: PushDatasetDataChunkProps[], retry = 3): Promise<number> => {
+  const insertLen = filterResult.success.length;
+  const failedDocuments: PushDatasetDataChunkProps[] = [];
+
+  // 使用 insertMany 批量插入
+  const batchSize = 200;
+  const insertData = async (startIndex: number, session: ClientSession) => {
+    const list = filterResult.success.slice(startIndex, startIndex + batchSize);
+
+    if (list.length === 0) return;
+
     try {
-      const results = await MongoDatasetTraining.insertMany(
-        dataList.map((item, i) => ({
+      await MongoDatasetTraining.insertMany(
+        list.map((item) => ({
           teamId,
           tmbId,
           datasetId,
@@ -152,36 +165,35 @@ export async function pushDataListToTrainingQueue({
           a: item.a,
           chunkIndex: item.chunkIndex ?? 0,
           weight: weight ?? 0,
-          indexes: item.indexes
-        }))
+          indexes: item.indexes,
+          retryCount: 5
+        })),
+        {
+          session,
+          ordered: true
+        }
       );
-      await delay(500);
-      return results.length;
-    } catch (error) {
-      if (retry > 0) {
-        await delay(500);
-        return insertData(dataList, retry - 1);
-      }
-      return Promise.reject(error);
+    } catch (error: any) {
+      addLog.error(`Insert error`, error);
+      // 如果有错误，将失败的文档添加到失败列表中
+      error.writeErrors?.forEach((writeError: any) => {
+        failedDocuments.push(data[writeError.index]);
+      });
+      console.log('failed', failedDocuments);
     }
+
+    // 对于失败的文档，尝试单独插入
+    await MongoDatasetTraining.create(failedDocuments, { session });
+
+    return insertData(startIndex + batchSize, session);
   };
 
-  let insertLen = 0;
-  const chunkSize = 50;
-  const chunkList = filterResult.success.reduce(
-    (acc, cur) => {
-      const lastChunk = acc[acc.length - 1];
-      if (lastChunk.length < chunkSize) {
-        lastChunk.push(cur);
-      } else {
-        acc.push([cur]);
-      }
-      return acc;
-    },
-    [[]] as PushDatasetDataChunkProps[][]
-  );
-  for await (const chunks of chunkList) {
-    insertLen += await insertData(chunks);
+  if (session) {
+    await insertData(0, session);
+  } else {
+    await mongoSessionRun(async (session) => {
+      await insertData(0, session);
+    });
   }
 
   delete filterResult.success;
